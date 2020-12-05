@@ -38,7 +38,7 @@
             <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
             <el-button type="danger" icon="el-icon-delete" size="mini" @click="showDeleteDialog(scope.row.id)"></el-button>
             <el-tooltip class="item" effect="dark" content="分配角色" placement="top" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button type="warning" icon="el-icon-setting" size="mini"  @click="setRoles(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -83,23 +83,40 @@
       </span>
     </el-dialog>
     <el-dialog v-dialogDrag title="编辑用户" :visible.sync="editDialogVisible" width="50%"
-    @close="editDialogClose">
-      <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="70px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="editForm.username" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="editForm.email"></el-input>
-        </el-form-item>
-        <el-form-item label="手机号" prop="mobile">
-          <el-input v-model="editForm.mobile"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
+                            @close="editDialogClose">
+    <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="70px">
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="editForm.username" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="邮箱" prop="email">
+        <el-input v-model="editForm.email"></el-input>
+      </el-form-item>
+      <el-form-item label="手机号" prop="mobile">
+        <el-input v-model="editForm.mobile"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="editUser">确 定</el-button>
       </span>
-    </el-dialog>
+  </el-dialog>
+  <el-dialog  @close="setRolesDialogClosed"
+    v-dialogDrag title="分配角色" :visible.sync="setRolesDialogVisible" width="50%">
+    <div>
+      <p>当前用户：{{roleInfo.username}}</p>
+      <p>当前角色：{{roleInfo.role_name}}</p>
+      <p>分配新角色：
+        <el-select v-model="selectedRoleId" placeholder="请选择">
+          <el-option v-for="item in roleList" :key="item.id" :label="item.roleName" :value="item.id">
+          </el-option>
+        </el-select>
+      </p>
+    </div>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="setRolesDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="saveSetRoles">确 定</el-button>
+    </span>
+  </el-dialog>
   </div>
 </template>
 
@@ -178,7 +195,11 @@ export default {
           { validator: checkMobile, trigger: 'blur' }
         ]
       },
-      deleteDialogVisible: false
+      deleteDialogVisible: false,
+      setRolesDialogVisible: false,
+      roleInfo: {},
+      roleList: [],
+      selectedRoleId: ''
     }
   },
   computed: {},
@@ -273,31 +294,34 @@ export default {
       }
       this.$message.success('删除用户成功！')
       this.getUserLists()
+    },
+    async setRoles(role) {
+      const { data } = await this.$http.get('roles')
+      if (data.meta.status !== 200) return this.$message.error('获取角色信息失败')
+      this.roleList = data.data
+      this.setRolesDialogVisible = true
+      this.roleInfo = role
+    },
+    async saveSetRoles() {
+      if (!this.selectedRoleId) {
+        return this.$message.error('请选择要分配的角色')
+      }
+      const { data } = await this.$http.put(`users/${this.roleInfo.id}/role`, { rid: this.selectedRoleId })
+      console.log(data)
+      if (data.meta.status !== 200) {
+        return this.$message.error('分配用户角色失败')
+      }
+      this.getUserLists()
+      this.setRolesDialogVisible = false
+      this.$message.success('分配用户角色成功')
+    },
+    setRolesDialogClosed() {
+      this.selectedRoleId = ''
+      this.roleInfo = ''
     }
   }
 }
 </script>
 
 <style scoped lang="less">
-  .el-breadcrumb{
-    margin-bottom: 15px;
-    font-size: 12px;
-  }
-  .el-card{
-    box-shadow: 0 1px 1px rgba(0,0,0,0.15) !important;
-  }
-  /deep/.el-card__body{
-    padding: 15px !important;
-  }
-  .el-table{
-    margin-top: 15px;
-    font-size: 12px;
-    padding: 0;
-  }
-  .el-table-column{
-    box-sizing: border-box;
-  }
-  .el-pagination{
-    margin-top: 10px;
-  }
 </style>
