@@ -7,20 +7,13 @@ import './assets/css/global.css'
 import axios from 'axios'
 import './utils/directive'
 import TreeTable from 'vue-table-with-tree-grid'
-<<<<<<< HEAD
-// 配置请求根路径merge
-=======
-
 // 导入富文本编辑器
 import VueQuillEditor from 'vue-quill-editor'
-
 // require styles 导入富文本编辑器对应的样式
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
 // 配置请求根路径
->>>>>>> goods_list
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
 // vue实例都有这个方法
 axios.interceptors.request.use(config => {
@@ -32,7 +25,6 @@ Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
 Vue.component('tree-table', TreeTable)
-
 // 将富文本编辑器，注册为全局可用的组件
 Vue.use(VueQuillEditor)
 
